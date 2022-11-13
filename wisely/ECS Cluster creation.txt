@@ -1,0 +1,80 @@
+Elastic Container Service (ECS)
+
+===> ECS Cluster Creation Steps
+
+Create Cluster
+
+Cluster Template: EC2 Linux + Networking
+
+Componets that are created
+
+Cluster
+VPC
+Subnets
+Auto Scaling Group
+
+Cluster Name: aws-ecs-linux-cluster
+
+Provisioning Model: On-Demand Instance
+
+EC2 Instance Type: 
+
+c3, c4, c5 - Compute optimized 
+
+d2, i2 - Storage Optimized
+
+m3, m4, m4, t2, t3 - General Purpose
+
+p2 - Graphic Instances
+
+r3 -  Memory Optimized
+
+Number of Instances: 3
+
+EC2 AMI Id: This AMI Id will contain pre-build Docker and ECS Agent.
+
+EBS Storage: 22
+
+Key Pair: Use an existing key pair to login to EC2 Instances
+
+===>
+
+Networking:
+
+VPC: Select a VPC
+
+Subnets: Select Private Subnets
+
+Container Instance IAM Role will be created.
+
+Security Group: A Security group is created with Inbound rules "All TCP" and Outbound Rules "All Traffic".
+
+Tag:
+
+Name: aws-ecs-linux-cluster
+
+===>
+
+ECS Cluster
+ECS Instance IAM Policy
+A Cloud Formation Stack will be created.
+
+Click on the CloudFormation Stack (EC2ContainerService-aws-ecs-linux-cluster)
+
+Events are shown
+
+Event AutoScaling: LaunchConfiguration
+Event AutoScaling: AutoScaling
+Event CloudFormation: Stack
+
+Click on View Cluster to see Cluster Information
+
+Services
+Tasks
+ECS Instances  --> Started after Service is created
+
+EC2 Instances would be running with Private IP's from Private Network.
+
+AutoScaling and LaunchConfiguration will also get created.
+Availability Zones and Instances can also be seen.
+

@@ -1,0 +1,127 @@
+kubectl get nodes
+kubectl get nodes -o wide (Internal IP & External IP)
+
+
+POD
+
+kubectl run <pod_name> --image <devadimadhav/petclinic:v1.0> --generator=run-pod/v1
+kubectl get pods
+kubectl get pods -o wide (IP address)
+kubectl describe pod <pod_name>
+kubectl get pods --show-labels
+kubectl get pods --show-labels -l <label<key>=<label><value>
+kubectl get pods --show-labl -l release=0
+kubectl get pods --label <key>=<value>
+kubectl delete pod <pod_name>
+kubectl get pods (No running Pods in Default Namespace)
+kubectl exec -ti <pod_name> -- /bin/bash
+kubectl exec -ti <pod_name> env
+kubectl exec -ti <pod_name> -c <container_name> -- /bin/bash
+kubectl exec -ti <pod_name> cat /usr/share/nginx/html/index.html
+cd /var/www/html   cd /usr/share/nginx/html
+kubectl get pods <pod_name> -o yaml
+kubectl get service <service_name> -o yaml
+kubectl apply -f .
+
+Accessing Logs
+
+kubectl get pods
+kubectl logs <pod_name>
+kubectl logs -f <pod_name>
+kubectl logs -f <pod_name> -c <container_name>
+kubectl logs -f --label name=<label_name> --all-containers
+kubectl logs --label name=<label_name>
+kubectl logs <pod_name> --previous
+kubectl logs <pod_name> -c <container_name>
+kubectl logs --label name=<label_name> -c <container_name>
+kubectl logs <pod_name> -c <container_name> --previous
+kubectl logs --since=1h <pod_name>
+kubectl logs --tail=20 <pod_name>
+
+
+Service - Node Port
+
+kubectl run <pod_name> --image <devadimadhav/petclinic:v1.0> --generator=run-pod/v1
+kubectl get pods
+kubectl expose pod <pod_name> --type=NodePort --port=80 --name=<service_name>
+kubectl get service
+kubectl get nodes -o wide
+kubectl get pods -o wide
+kubectl expose pod <pod_name> --type=NodePort --port=81 --name=<service_name>   ---> Gets Failed
+kubectl expose pod <pod_name> --type=NodePort --port=81 --target-port=80 --name=<service_name>
+kubectl get service
+kubectl get nodes -o wide
+kubectl get service <service_name> -o yaml
+
+http://<Node-public-ip>:<Node Port>
+
+Deleting
+
+kubectl get all
+kubectl delete pod <pod_name>
+kubectl delete pods --all
+kubectl delete replicaset webapp
+kubectl delete service <service_name>
+
+Namespace
+
+kubectl get namespaces   ----> default, kube-public, kube-system
+kubectl create namespace mklabs
+kubectl get pods --namespace mklabs
+kubectl get pods --namespace mklabs -o wide
+kubectl describe pod <pod_name> --namespace mklabs
+kubectl exec -ti <pod_name> --namespace mklabs -- /bin/bash
+
+Launching Pod on a specific Node
+
+kubectl get nodes
+kubectl label nodes <node_name> disktype=ssd
+kubectl get nodes --show-labels
+kubectl api-versions
+kubectl api-resources
+kubectl port-forward webapp 30080:80
+kubectl rollout status deploy webapp
+kubectl rollout history deploy webapp
+kubectl rollout undo deploy webapp --to-revision=2
+kubectl get all
+
+Port Range 30000 - 32767
+
+kubectl apply -f workloads.yaml
+kubectl logs -f <pod_name>
+kubectl get pv
+kubectl get pvc
+
+kubectl get nodes
+kubectl describe node <node_name>
+kubectl top pod
+kubectl get pod --all-namespaces
+kubectl get addons
+
+kubectl top pod  ---> Memory & CPU Usage for the Pod
+kubectl top node ---> Memory & CPU Usage for the Entire Cluster4
+kubectl addons list
+kubectl addons enable metrics-server
+kubectl get all -n kube-system
+
+Dashboard
+
+kubectl addons list
+kubectl addons enable dashboard
+kubectl get all -n kube-system
+kubectl dashboard
+kubectl addons disable metrics-server
+rm -rf ~/.kube/
+rm -rf ~/.minikube/
+kubectl addons enable heapster
+kubectl dashboard
+
+kubectl autoscale deployment api-gateway --cpu-percent 400 --min 1 --max 4
+kubectl get hpa
+kubectl describe hpa <hpa_name>
+kubectl get hpa <hpa_name>
+kubectl get hpa <hpa_name> -o yaml
+kubectl delete hpa <hpa_name>
+
+
+

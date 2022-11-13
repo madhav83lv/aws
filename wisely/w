@@ -1,0 +1,133 @@
+Jenkins Server setup: worked
+
+cd /opt; apt update
+cd /opt; apt install openjdk-11-jdk -y
+apt update
+cd /opt; wget https://get.jenkins.io/war-stable/2.361.1/jenkins.war
+cd /opt; wget https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.65/bin/apache-tomcat-9.0.65.tar.gz
+cd /opt; tar zxf apache-tomcat-9.0.65.tar.gz
+apt update
+cd /opt/apache-tomcat-9.0.65/webapps/; cp /opt/jenkins.war .
+cd /opt/apache-tomcat-9.0.65/bin/; ./startup.sh
+
+
+Slave Server: worked
+
+cd /opt; apt update
+cd /opt; apt install openjdk-11-jdk -y
+apt update
+cd /opt/; sudo apt-get update
+cd /opt; wget https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.65/bin/apache-tomcat-9.0.65.tar.gz
+cd /opt; tar zxf apache-tomcat-9.0.65.tar.gz
+apt update
+cd /opt/; wget https://dlcdn.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
+cd /opt/; tar zxf apache-maven-3.8.6-bin.tar.gz
+cd /opt/; sudo apt install unzip -y
+cd /opt/; wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.7.0.2747-linux.zip
+cd /opt; unzip sonar-scanner-cli-4.7.0.2747-linux.zip
+
+
+Sonarqube Server setup: worked
+
+cd /opt/; sudo apt-get update
+cd /opt/; sudo apt-get install openjdk-11-jdk -y
+cd /opt; wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-8.9.9.56886.zip
+cd /opt/; sudo apt install unzip -y
+cd /opt; unzip sonarqube-8.9.9.56886.zip
+useradd sonaradmin
+chown -R sonaradmin:sonaradmin /opt/sonarqube-8.9.9.56886
+cd /opt/sonarqube-8.9.9.56886/bin/linux-x86-64; sudo su sonaradmin
+
+
+
+kubernetes Master setup:
+
+swapoff -a
+sudo apt-get update
+sudo apt-get install docker.io -y
+sudo apt-get update
+sudo apt-get install curl apt-transport-https ca-certificates software-properties-common -y
+sudo apt-get update
+sudo curl -SL https://github.com/docker/compose/releases/download/v2.7.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo apt-get update
+systemctl enable docker
+systemctl start docker 
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+cat <<EOF> /etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+sudo apt-get update
+sudo apt-get install kubeadm kubectl kubelet -y
+sudo apt-get update
+kubeadm init --apiserver-advertise-address=172.31.34.141 --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=NumCPU
+cd $HOME; mkdir -p .kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+sudo apt-get update
+sudo kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+sudo apt-get update
+
+
+kubectl version --client
+
+Kubernetes Slave setup:
+
+swapoff -a
+sudo apt-get update
+sudo apt-get install docker.io -y
+sudo apt-get update
+sudo apt-get install curl apt-transport-https -y
+sudo apt-get update
+sudo curl -SL https://github.com/docker/compose/releases/download/v2.7.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo apt-get update
+systemctl enable docker
+systemctl start docker
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+cat <<EOF> /etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+sudo apt-get update
+sudo apt-get install kubeadm kubectl kubelet -y
+sudo apt-get update
+
+
+Nexus Setup:
+
+cd /opt; apt update
+cd /opt; apt install openjdk-8-jdk -y
+cd /opt; wget https://download.sonatype.com/nexus/3/nexus-3.40.1-01-unix.tar.gz
+cd /opt; tar zxf nexus-3.40.1-01-unix.tar.gz
+cd /opt; sudo mv /opt/nexus-3.40.1-01 /opt/nexus
+
+
+Docker Service & Jenkins Service setup: 
+
+cd /opt; apt update
+cd /opt; apt install openjdk-8-jdk -y
+apt update
+cd /opt; wget https://get.jenkins.io/war-stable/2.346.2/jenkins.war
+cd /opt; wget https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.81/bin/apache-tomcat-8.5.81.tar.gz
+cd /opt; tar zxf apache-tomcat-8.5.81.tar.gz
+apt update
+cd /opt/apache-tomcat-8.5.81/webapps/; cp /opt/jenkins.war .
+cd /opt/apache-tomcat-8.5.81/bin/; ./startup.sh
+sudo apt-get update
+sudo apt-get install docker.io -y
+sudo apt-get update
+sudo apt-get install curl apt-transport-https -y
+sudo apt-get update
+sudo curl -SL https://github.com/docker/compose/releases/download/v2.7.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo apt-get update
+systemctl enable docker
+systemctl start docker
+
+cat /etc/group | grep -i docker
+cat /etc/group | grep -i jenkins
+sudo groupadd jenkins
+sudo useradd jenkins -g jenkins
+sudo usermod -aG docker jenkins
+sudo chmod 777 /var/run/docker.sock
+jenkins ALL=(ALL) NOPASSWD: ALL

@@ -1,0 +1,134 @@
+Jenkins File
+
+pipeline{
+    agent any
+    stages{
+        stage("checkout"){
+            steps{
+                checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/csenapati12/java-tomcat-maven-docker.git']]]
+            }
+        }
+        stage("Build and packaging"){
+            steps{
+                sh """
+                mvn clean package
+                """
+            }
+        }
+        stage("Deploy tomcat"){
+            steps{
+                script{
+                ansiblePlaybook credentialsId: 'root-credentials', inventory: 'ansible-hosts', playbook: 'deploytomcat.yml'
+                }
+            }
+        }
+    }
+    
+}
+
+
+=======
+
+
+
+node(){
+checkout scm
+    stage('Code build'){
+        sh "mvn package"
+    }
+    stage('Docker build and start'){
+        sh '''
+        
+        docker build -t testimage .
+        docker run --name=newcontainer -d -p 9898:8080 testimage
+         '''
+     }
+      stage('Smoke testing and result'){
+              echo "smoke testing"
+      }
+      
+       stage('Docker build and start'){
+        sh '''
+        docker stop newcontainer
+        docker rm -f newcontainer
+        docker rmi testimage
+        
+         '''
+     }
+
+}
+
+
+========
+
+
+
+pipeline {
+  agent {
+      label 'slave'
+  }
+  
+  tools {
+     jdk 'JAVA8'
+     maven 'MAVEN3'
+  }
+  
+  options {
+      buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')
+      disableResume()
+      disableConcurrentBuilds()
+  }
+  
+  stages {
+      stage('Checkout Code'){
+          steps {
+              git 'https://github.com/madhav83lv/PetClinic.git'
+          }
+      }
+  
+      stage('Maven Compile'){
+          steps {
+              sh "mvn clean install"
+          }
+      }
+      
+      stage('SonarQube Scan'){
+          when {
+              branch 'master'
+          }
+          environment {
+              scannerHome = tool 'Sonarqube 4.7'
+          }
+          steps {
+              withSonarQubeEnv('Sonarqube web'){
+                  sh "$scannerHome/bin/sonar-scanner -Dproject.settings=sonar-project.properties"
+              }
+          }
+      }
+      
+      stage('Maven Unit Test'){
+          when {
+              branch 'master'
+          }
+          
+          steps {
+              echo "This stage is performing Unit Test"
+              sh "mvn test"
+          }
+      }
+      
+      stage('Maven Package'){
+          steps {
+              echo "This stage is Packaging the Code"
+              sh "mvn package"
+          }
+      }
+      
+      stage('Upload Artifact'){
+          steps {
+              echo "Uploading Maven Artifact to Nexus"
+              sh '''curl -u admin:admin POST "http://15.206.82.195:8081/service/rest/v1/components?repository=petclinic" -H "accept: application/json" -H "Content-Type: multipart/form-data" -F "maven2.groupId=org.springframework.samples" -F "maven2.artifactId=petclinic" -F "maven2.version=1.0.0" -F "maven2.asset1=@${WORKSPACE}/target/petclinic.war" -F "maven2.asset1.extension=war"
+              '''
+          }
+          
+      }

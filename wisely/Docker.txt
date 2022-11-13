@@ -1,0 +1,142 @@
+Docker
+
+docker --version
+
+===>
+
+Installation:
+
+swapoff -a
+sudo apt-get update
+sudo apt-get install docker.io -y
+sudo apt-get update
+sudo apt-get install curl apt-transport-https ca-certificates software-properties-common -y
+sudo apt-get update
+sudo curl -SL https://github.com/docker/compose/releases/download/v2.7.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo apt-get update
+systemctl enable docker
+systemctl start docker
+sudo usermod -aG docker $USER
+
+Docker client automatically gets installed with Docker daemon
+
+Logout and Login
+
+gnome-session-quit -logout   ---> Logout
+gnome-session-quit --no-prompt
+
+
+====>
+
+docker image ls
+docker --version
+systemctl start docker.service   ---> Docker Daemon start
+systemctl stop docker.service    ---> Docker Daemon stop
+
+====>
+
+Docker Hub
+
+Create Docker Hub Registry (Docker Account)
+
+We can connect Docker Registry from Docker client
+
+docker login
+
+====>
+
+Docker File
+
+Microservice is a smaller portion of application which is written in developer's wishful language.
+Each Microservice is run in a independent isolated container. 
+
+Container will execute the application program code and the dependencies of the application is predefined in Dockerfile.
+
+Docker File Components:
+
+Operating System
+Python Runtime
+Flask Runtine
+The Code
+Start the code running
+
+docker build   ----> Build it into Image
+docker run     ----> Run the container from the Image
+
+====>
+
+Docker Image (/var/lib/docker/image)
+
+docker info
+docker images -a
+docker image pull ubuntu:latest
+docker image pull devadimadhav/apache:v2.0
+docker image search ubuntu
+docker image history <imageid>
+
+docker images
+docker images -q
+docker images -qa
+docker image rm <imageid>
+docker image rmi <imageid>
+docker image rmi -f <imageid>
+for i in $(docker images -q); do docker rmi -f $i; done
+
+docker container ps
+docker container ps -a (Non 0 status indicates container not started properly)
+docker container stop <continer_id>
+docker container start <container_id>
+docker container rm <container_id>
+docker container rmi -f <container_id>
+docker container logs <container_id>
+docker container inspect <container_id>
+docker container rename <old_name> <new_name>
+
+docker image build -t vieux/apache:2.0 .
+docker image build -t vieux/apache:latest .
+docker image build -t addemp:latest ./
+docker image build -f /directorypath
+docker image tag <image_id> <username>/<repositoyname>:<version>
+docker image tag <image_id> devadimadhav/apache:2.0
+docker image tag vieux/apache:2.0 devadimadhav/apache:2.0
+docker image push devadimadhav/apache:2.0
+docker image ls
+docker image inspect <imageid>
+
+docker container run -dti <image_name>
+docker container run -dti --name <container_name> -p 8081:80 <image_name>
+docker container run -dti --name <container_name> -p 8081:80 --hostname <host_name> --network host <image_name>
+docker container run -dti --name <container_name> -p 8081:80 --hostname <host_name> --network host --ip <ip_address> --restart always <image_name>
+docker container run -dti --name <container_name> -p 8081:80 --hostname <host_name> --network host --ip <ip_address> --mount source=mklabs, destination=/volcreate --restart always <image_name>
+docker container run -dti --name <container_name> -p 8081:80 --hostname <host_name> --network host --ip <ip_address> bind -v /dockerdata:/volcreate --restart always <image_name>
+docker container run -dti -e NAME="docker run command" --name <container_name>
+docker container run -dti -e -DBHOST="empdb" -e DBPORT="3306" -e DBUSER="root" -e DBPWD="abcd1234" -e DATABASE="awsecs" --name addemp --network mklabs -p 80:80 addemp:latest
+docker container run -dti -e -DBHOST="empdb" -e DBPORT="3306" -e DBUSER="root" -e DBPWD="abcd1234" -e DATABASE="awsecs" --name addemp --network mklabs -p 8080:80 addemp:latest
+docker container exec -it <container_id> /bin/bash
+
+docker network ls (bridge is default)
+docker network create madhav
+docker network inspect madhav   --> We can see the IP Address
+docker network rm madhav
+docker network create --subnet 172.18.0.2/24 madhav
+docker network create --attachable -d bridge --subnet 172.18.0.2/24 madhav
+docker network connect madhav <container_id>
+
+docker volume ls  (/var/lib/docker/volumes)
+docker volume create mklabs
+docker volume create -d local mklabs
+docker volume inspect mklabs
+docker volume prune
+docker volume rm -f mklabs
+
+apt install net-tools -y
+netstat -plant | grep :8081
+ifconfig
+service apache2 start
+curl localhost/<container_name>
+curl localhost:8080/<container_name>
+ps -ef
+exit
+
+

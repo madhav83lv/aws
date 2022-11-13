@@ -1,0 +1,258 @@
+Kubernetes YAML
+
+deployment.yaml
+ingress.yaml
+hpa.yaml
+mem.yaml
+service.yaml
+pvc.yaml
+
+DEPLOYMENT YAML
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-deploy
+  labels:
+    app: myapp
+	
+spec:
+  minReadySeconds: 30
+  replicas: 5
+  
+  strategy:
+    type: RollingUpdate
+	rollingUpdate:
+	  maxSurge: 50%
+	  maxUnavailable: 10%
+	  
+  selector:
+    matchLabels:
+	  app: myapp-deployment
+	  
+  template:
+    metadata:
+	  labels:
+	    app: myapp-deployment
+		
+    spec:
+	
+	  containers:
+	  - name: myapp
+	    imagePullPolicy: IfNotPresent
+		image: devadimadhav/myapp:v3.0
+		
+		ports:
+		- containerPort: 80
+		  hostPort: 8080
+		  protocol: TCP
+		  
+	    readinessProbe:
+		  httpGet:
+		    path: /
+			port: 80
+		  initialDelaySeconds: 15
+		  periodSeconds: 20
+		  successThreshold: 1
+		  
+		livenessProbe:
+		  httpGet:
+		    path: /
+			port: 80
+		  initialDelaySeconds: 15
+		  periodSeconds: 60
+		  successThreshold: 2
+		  
+		resources:
+		  requests:
+		    cpu: "0.5"
+			memory: "100Mi"
+			ephemeral-storage: "2Gi"
+		  limits:
+		    cpu: "1"
+			memory: "200Mi"
+			ephemeral-storage: "4Gi"
+			
+		volumeMounts:
+        - name: cache-volume
+          mountPath: /usr/share/nginx/html
+    
+      volumes:
+      - name: cache-volume
+   	    hostPath:
+		  path: /tmp/mountdir   ---> Should be present on Node Server
+		  type: Directory
+		  
+	  restartPolicy: Always
+	  
+	  
+	  
+User Managment MicroService Deployment YAML
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-nginxapp
+  labels:
+    app: frontend-nginxapp
+	tier: frontend
+	
+spec:
+
+  replicas: 5
+  
+  strategy:
+    type: RollingUpdate
+	rollingUpdate:
+	  maxSurge: 30%
+	  maxUnavailable: 10%
+	  
+  selector:
+    matchLabels:
+	  app: frontend-nginxapp
+	  
+  template:
+    metadata:
+	  labels:
+	    app: frontend-nginxapp
+		tier: frontend
+		
+	spec:
+	
+	  containers: # List
+	    - name: frontend-nginxapp
+		  imagePullPolicy: IfNotPresent
+		  image: devadimadhav/petclinic:v2.o
+		  
+		  ports: # List
+		  - containerPort: 8095
+		    hostPort: 8080
+			protocol: TCP
+			
+		  env:
+		    - name: DB_HOSTNAME
+			  value: "mysql"
+			- name: DB_PORT
+			  value: "3306"
+			- name: DB_USERNAME
+			  value: "root"
+			
+		  readinessProbe:
+		    httpGet:
+			  path: /
+			  port: 80
+			initialDelaySeconds: 15
+			periodSeconds: 20
+			successThreshold: 1
+			
+		  livenessProbe:
+		    httpGet:
+			  path: /
+			  port: 80
+			initialDelaySeconds: 15
+			periodSeconds: 60
+			successThreshold: 1
+			
+	      resources:
+		    requests:
+			  cpu: "0.5"
+			  memory: "100Mi"
+			  ephemeral-storage: "2Gi"
+			  
+			limits:
+			  cpu: "1"
+			  memory: "200Mi"
+			  ephemeral-storage: "4Gi"
+			  
+	      volumeMounts:
+		    - name: cache-volume
+			  mountPath: /usr/share/nginx/html
+			  
+	    volumes:
+		  - name: cache-volume
+		    hostPath:
+			  path: /tmp/mountdir
+			  type: Directory
+			  
+	    restartPolicy: Always
+	  
+	  
+	  
+SERVICE YAML
+
+apiVersion: apps/v1
+kind: Service
+metadata:
+  name: myapp-deploy-svc
+  
+spec:
+
+  type: NodePort
+  
+  selector:
+    matchLabels:
+	  app: myapp-deployment
+	  
+  ports:
+    - name: http
+	  port: 80
+	  targetPort: 80
+	  nodePort: 30001
+	  
+	  
+NODE PORT SERVICE YAML
+	  
+apiVersion: apps/v1
+kind: Service
+metadata:
+  name: myfrontend-service
+  labels:
+    app: frontend-nginxapp
+	tier: frontend
+	
+spec:
+ 
+  type: NodePort
+  
+  selector:
+    matchLabels:
+	  app: frontend-nginxapp    ----> Same Label as provided in Deployment
+	  
+  ports:
+    - name: http
+	  port: 8095         ----> ClusterIP Service Port
+	  targetPort: 8095	----> Container Port
+	  nodePort: 31234   ----> WorkerNode Port
+	  
+	  
+kubectl apply -f <replica-set.yaml>
+kubectl get replicaset
+kubectl get pods
+kubectl describe pod <pod_name>
+kubectl delete pod <pod_name>
+kubectl get pods   -----> Pod is Auto created
+
+kubectl apply -f <replicaset-service.yaml>
+kubectl get service  ----> NodePort
+kubectl get nodes -o wide  ----> External IP
+
+kubectl create -f <service_file.yaml>
+kubectl get service   -----> WorkerNode Port
+kubectl get pods -o wide   ----> External IP  
+
+http://<External IP>:<NodePort>
+		  
+		  
+kubectl apply -f kube-manifests/
+kubectl get pods
+kubectl get logs -f <pod_name>
+kubectl get service
+kubectl get nodes -o wide
+kubectl get sc,pvc,pv
+
+kubectl apply -f <deployment.yaml> <deployment-service.yaml>
+kubectl get deployments
+kubectl get replicasets
+kubectl get pods
+kubectl get service   -----> WorkerNode Port
+kubectl get nodes -o wide  ----> WorkerNode External I
