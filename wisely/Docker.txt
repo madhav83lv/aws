@@ -100,6 +100,7 @@ docker image build -f /directorypath
 docker image tag <image_id> <username>/<repositoyname>:<version>
 docker image tag <image_id> devadimadhav/apache:2.0
 docker image tag vieux/apache:2.0 devadimadhav/apache:2.0
+docker image tag busybox:latest sd-repo1.inside.globalcashcard.com/busybox:latest
 docker image push devadimadhav/apache:2.0
 docker image ls
 docker image inspect <imageid>
