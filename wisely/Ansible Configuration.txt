@@ -1,0 +1,49 @@
+vi inventory
+
+server1 ansible_host=172.16.28.10 ansible_ssh_pass=xxx ansible_user=tony
+
+config file = /etc/ansible/ansible.conf
+module search path = /usr/share/ansible/plugins/modules
+executable location = /bin/ansible
+
+Ansible Vault
+
+ansible-vault view vault.yaml
+ansible-vault decrypt vault.yaml
+ansible-vault edit vault.yaml
+ansible-vault create vault.yaml
+ansible-vault encrypt vault.yaml
+
+git clone https://<username>:<password>@github.com/mklabs/.git
+
+Ansible:
+
+Deployment  --> copy
+Provisioning
+Patching
+Administration
+
+Client Server Architecture
+
+Client ---> Ansible, Puppet, Chef are Installed
+Servers ----> Host Servers are managed by Client
+
+Pull Based --> Host Servers pull change configurations from Client Server
+Chef & Puppet
+Push Based --> Client Server push configuration to Host Servers
+Ansible & Salt
+
+Playbook is declarative syntax written in YAML
+Agentless and ssh
+
+Build > Test > Packaging > Deployment
+
+Dev > QA > Staging > UAT > Production
+
+Copy id_rsa.pub from Ansible client to authorized_keys inside Host servers
+
+ssh-keygen to get id_rsa.pub
+cd /root/.ssh > ls -la > id_rsa.pub
+cd /root/.ssh > ls -la > authorised
+
+ssh root@publicip

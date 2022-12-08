@@ -1,0 +1,321 @@
+Artifact Download and Upload to Tomocat webapps location:
+
+---
+- hosts: tomcatservers
+  become: yes
+  gather_facts: False
+  tasks:
+
+  - name: Install EPEL-release
+    yum: name=epel-release state=present
+
+
+  - name: Install java_1.8
+    yum: name=java-1.8.0-openjdk.x86_64 state=present
+
+  - name: Install tomcat
+    yum: name=tomcat state=present
+
+
+  - name: Download latest VProfile.war file
+    get_url: url=http://{{nexusip}}:8081/nexus/content/repositories/VProfile-repo/{{groupid}}/{{time}}/{{build}}/{{vprofile_version}} dest=/tmp/ mode=755
+
+  - name: Stop tomcat service
+    service: name=tomcat state=stopped
+
+  - name: Copy artifact to tomcat folder
+    shell: cp /tmp/{{vprofile_version}} /var/lib/tomcat/webapps
+
+  - name: Delete link to existing vprofile version
+    file: path=/var/lib/tomcat/webapps/VProfile state=absent
+
+  - name: Start tomcat service
+    service: name=tomcat state=started
+  - wait_for: path=/var/lib/tomcat/webapps/{{time}}-{{build}}
+
+  - name: Link latest vprofile version
+    file: src=/var/lib/tomcat/webapps/{{time}}-{{build}} dest=/var/lib/tomcat/webapps/VProfile state=link
+
+  - name: Stop iptables
+    service: name=iptables state=stopped
+	
+====
+
+---
+- name: Setup HTTPD and PHP
+  hosts: 
+  become: yes
+  
+  tasks:
+  - name: Install latest version of HTTPD and PHP
+    package:
+	  name:
+	    - httpd
+		- php
+	  state: latest
+	  
+  - name: Replace default DocumentRoot in httpd.conf
+    replace:
+	  path: /etc/httpd/conf/httpd.conf
+	  regexp: DocumentRoot \"\var\/www\/html\"
+	  replace: DocumentRoot "/var/www/html/myroot"
+	  
+  - name: Create the New Root Directory if it does not exist
+    file:
+	  path: /var/www/html/myroot
+	  state: directory
+	  owner: apache
+	  group: apache
+	  
+  - name: Copy the template
+    template:
+	  src: /    /phpinfo.php.j2
+	  dest: /var/www/html/myroot/phpinfo.php
+	  owner: apache
+	  group: apache
+	  
+  - name: Start and enable service httpd
+    service:
+	  name: httpd
+	  state: started
+	  enabled: yes
+	  
+ansible-playbook -i inventory httpd.yaml
+rpm -qa | grep httpd
+rpm -qa | grep php
+ansible all -a "ls -ltr /opt/devops/" -i inventory
+
+
+====
+
+
+---
+- name: Create file and set ACL in Host1
+  hosts: server1
+  become: yes
+  
+  tasks:
+  - name: Create the blog.txt on server1
+    file:
+	  path: /opt/devops/blog.txt
+	  state: touch
+	  
+  - name: Set ACL for blog.txt
+    acl:
+	  path:/opt/devops/blog.txt
+	  entity: tony
+	  etype: group
+	  permissions: r
+	  state: present
+	  
+ansible-playbook -i inventory playbook.yaml
+ansible all -a "ls -ltr /opt/devops" -i inventory
+	  
+====
+
+
+---
+- name: Create file and set ACL in Host2
+  hosts: server2
+  become: yes
+  
+  tasks:
+  - name: Create the story.txt file on server2
+    file:
+	  path: /opt/devops/story.txt
+	  state: touch
+	  
+  - name: Set ACL for story.txt
+    acl:
+	  path: /opt/devops/story.txt
+	  entity: steve
+	  etype: user
+	  permissions: rw
+	  state: present
+	  
+ansible-playbook -i inventory playbook.yaml
+ansible all -a "ls -ltr /opt/devops" -i inventory
+
+=====
+
+
+---
+- name: Unarchive files
+  hosts: server-1, server-2, server-3
+  become: yes
+  
+  tasks:
+  - name: Extract the archive and set permissions
+    unarchive:
+	  src: /usr/src/data/datacenter.zip
+	  dest: /opt/data
+	  owner: "{{ ansible_user }}"
+	  group: "{{ ansible_user }}"
+	  mode: "0655"
+	  
+ansible-playbook -i inventory playbook.yaml
+ansible all -a "ls -ltr /opt/data" -i inventory
+ansible-playbook -i hosts playbook.yaml --check
+
+=====
+
+
+---
+- name: Ansible Copy
+  hosts: all
+  become: yes
+  
+  tasks:
+  - name: To copy index.html to servers
+    copy:
+	  src: /usr/src/dba/index.html
+	  dest: /opt/dba
+	  
+=====
+
+- name: Create text files and softlink
+  hosts: server1, server2, server3
+  become: yes
+  
+  tasks:
+    - name: To create a file blog.txt on server1
+      file:
+	    path: /opt/itadmin/blog.txt
+		owner: tony
+		group: tony
+		state: touch
+	  when: inventory_hostname == "server1"
+	  
+    - name: To create a file story.txt on server2
+	  file:
+	    path: /opt/itadmin/story.txt
+		owner: steve
+		group: steve
+		state: touch
+	  when: inventory_hostname == "server2"
+	  
+	- name: Link the directory
+	  file:
+	    src: /opt/itadmin/
+		dest: /var/www/html
+		state: link
+		
+======
+
+- name: Verify Apache Installation
+  hosts: webservers
+  vars:
+    http_port: 80
+	max_clients: 200
+  remote_user: root
+  
+  tasks:
+  - name: Ensure Apache is at latest
+    apt:
+	  name: httpd
+	  state: latest
+  
+  - name: Write the Apache config file
+    template:
+      src: /srv/httpd.j2
+      dest: /etc/httpd.conf
+    notify:
+    - Restart apache
+
+  - name: Ensure Apache is running
+    service:
+      name: httpd
+      state: started	
+  
+  handlers:
+  - name: Restart apache
+    service:
+      name: httpd
+      state: restarted
+
+======
+
+- name: Verify Apache Installation
+  hosts: webservers
+  vars:
+    http_port: 80
+    max_clients: 200
+  remote_user: root
+
+  tasks:
+  - name: Template Configuration file
+    template:
+      src: template.j2
+      dest: /etc/httpd.conf
+    notify:
+      - Restart Apache
+      - Restart memcached
+
+  handlers:
+  - name: Restart memcached
+    service:
+      name: memcached
+      state: restarted
+
+  - name: Restart Apache
+    service:
+      name: apache
+      state: restarted
+
+======
+
+- name: Verify Apache Installation
+  hosts: webservers
+  vars:
+    http_port: 80
+    max_clients: 220
+  remote_user: root
+
+  tasks:
+  - name: Restart everything
+    command: echo "This Task will restart webservers"
+    notify: "restart web services"
+
+  handlers:
+  - name: Restart memcached
+    service:
+      name: memcached
+      state: restarted
+    listen: "restart web services"
+
+  - name: Restart Apache
+    service:
+      name: apache
+      state: restarted
+    listen: "restart web services"
+
+======	
+
+---
+- name: ansible playbook to test ansible vault
+  hosts: all
+  become: true
+  
+  tasks:
+  - name: Clone a Repo
+    git:
+	  repo: https://<username>:<password>@github.com/<username>/.git
+	  dest: /opt/ansadmin/test-vault
+	  
+	  
+---
+- name: ansible playbook to test ansible vault
+  hosts: all
+  become: true
+  vars_files:
+    - vault-pass.yaml
+	
+  tasks:
+  - name: Clone a Repo
+    git:
+	  repo: https://<username>:{{ password }}@github.com/<username>/.git
+      dest: /opt/ansadmin/test-vault
+	  
+ansible-playbook -i inventory ansible-vault.yaml --ask-vault-pass
+ansible-playbook -i inventory ansible-vault.yaml --vault-password-file passwordfile.yaml
+
