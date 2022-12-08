@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: position-tracker
+
+spec:
+  selector:
+    matchLabels:
+      app: position-tracker
+
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: position-tracker
+
+    spec:
+      containers:
+      - name: position-tracker
+        image: richardchesterwood/k8s-fleetman-position-tracker:release3
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: production-microservice
+
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+
+spec:
+  selector:
+    matchLabels:
+      app: mongodb
+
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mongodb
+
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:3.6.5-jessie
+        volumeMounts:
+        - name: mongo-persistent-storage
+          mountPath: /data/db
+      volumes:
+      - name: mongo-persistent-storage
+        hostPath:
+          path: /truckdata
+          type: DirectoryOrCreate
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-mongodb
+
+spec:
+  selector:
+    matchLabels:
+      app: mongodb
+
+  ports:
+
+  type: ClusterIP
+    - name: mongoport
+      port: 27017

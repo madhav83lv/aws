@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+
+spec:
+  selector:
+    matchLabels:
+      app: mongodb
+
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mongodb
+
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:3.6.5-jessie
+        volumeMounts:
+        - name: mongo-persistent-storage
+          mountPath: /data/db
+
+      volumes:
+      - name: mongo-persistent-storage
+        persistentVolumeClaim:
+          claimName: mongo-pvc
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-mongodb
+
+spec:
+  selector:
+    matchLabels:
+      app: mongodb
+
+  ports:
+  - name: mongoport
+    port: 27017
+  type: ClusterIP
+
+
+---
+
+#Storage to be created
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+
+spec:
+  storageClassName: cloud-ssd
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 7Gi
+
+
+
+#Same storage volume will be created in EBS AWS
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: cloud-ssd
+
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp2
+
+
+#kubectl get pv
+#kubectl get pvc

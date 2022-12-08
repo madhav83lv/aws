@@ -1,0 +1,61 @@
+#Image: richardchesterwood/k8s-fleetman-queue:release1
+#Port 8161: Expose this to a browser using 30010
+#Port 61616 is used to send/receive messages
+
+#Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: queue
+
+spec:
+  selector:
+    matchLabels:
+      app: queue
+
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: queue
+
+    spec:
+      containers:
+      - name: webapp
+        image: richardchesterwood/k8s-fleetman-queue:release1
+
+
+#Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-queue
+
+spec:
+  type: NodePort
+
+  ports:
+  - name: http
+    port: 8161
+    nodePort: 30010
+
+    name: endpoint
+    port: 61616
+
+    selector:
+      matchLabels:
+        app: queue
+
+
+#kubectl apply -f services.yaml
+#kubectl get all
+#kubectl get service -----> NodePort
+#kubectl get nodes -o wide ------> External IP
+#kubectl get pods -o wide
+
+#Get the IP address of the Cluster
+#kubectl describe pod <pod_name>
+    
+    
+
+
