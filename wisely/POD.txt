@@ -46,7 +46,9 @@ kubectl get pods
 kubectl expose pod <pod_name> --type=NodePort --port=80 --name=<service_name>
 kubectl get service
 kubectl get nodes -o wide
-kubectl get pods -o wide
+kubectl get pods -o wide       ---> Gives the IP address of the Pod 
+ping <IP Address>
+curl <IP Address>
 kubectl expose pod <pod_name> --type=NodePort --port=81 --name=<service_name>   ---> Gets Failed
 kubectl expose pod <pod_name> --type=NodePort --port=81 --target-port=80 --name=<service_name>
 kubectl get service
@@ -70,6 +72,7 @@ kubectl create namespace mklabs
 kubectl get pods --namespace mklabs
 kubectl get pods --namespace mklabs -o wide
 kubectl describe pod <pod_name> --namespace mklabs
+kubectl exec -ti <pod_name> -- /bin/bash
 kubectl exec -ti <pod_name> --namespace mklabs -- /bin/bash
 
 Launching Pod on a specific Node
@@ -122,6 +125,14 @@ kubectl describe hpa <hpa_name>
 kubectl get hpa <hpa_name>
 kubectl get hpa <hpa_name> -o yaml
 kubectl delete hpa <hpa_name>
+
+Disabling Swap Memory
+Go to vi /etc/fstab and comment /dev/mapper/cryptswapl
+
+containerPort: If we want to expose Container Port
+targetPort: If we want to expose Host Port that will be binded to container.
+
+
 
 
 
