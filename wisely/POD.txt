@@ -16,7 +16,7 @@ kubectl delete pod <pod_name>
 kubectl get pods (No running Pods in Default Namespace)
 kubectl exec -ti <pod_name> -- /bin/bash
 kubectl exec -ti <pod_name> env
-kubectl exec -ti <pod_name> -c <container_name> -- /bin/bash
+kubectl exec -ti <pod_name> -c <container_name> -- /bin/bash   ---> Login to a Specific container in the Pod
 kubectl exec -ti <pod_name> cat /usr/share/nginx/html/index.html
 cd /var/www/html   cd /usr/share/nginx/html
 kubectl get pods <pod_name> -o yaml
@@ -64,6 +64,10 @@ kubectl delete pod <pod_name>
 kubectl delete pods --all
 kubectl delete replicaset webapp
 kubectl delete service <service_name>
+kubectl delete pods,service baz foo   ---> Delete Pods and Services with same name baz & foo
+kubectl delete pods,service -l name=myLabel   ---> Delete Pods and Services with label name=myLabel
+kubectl delete pod foo --now  ---> Delete a Pod with minimum delay
+kubectl delete pod foo --grace-period=0 --force  --->Delete a Pod Immediately
 
 Namespace
 
@@ -82,6 +86,12 @@ kubectl label nodes <node_name> disktype=ssd
 kubectl get nodes --show-labels
 kubectl api-versions
 kubectl api-resources
+kubectl port-forward <container_name> :80 &  ---> Port forward to a running container
+kubectl port-forward <pod_name> 5000 6000    ---> Listen on Ports 5000 and 6000 locally, forwarding data to/from ports 5000 & 6000 in the Pod
+kubectl port-forward <pod_name> 8888:5000    ---> Listen on Port 8888 locally, forwarding to 5000 in the Pod
+kubectl port-forward <pod_name> :5000        ---> Listen on a random port locally, forwarding to 5000 in the Pod
+kubectl port-forward <pod_name> 0:5000       ---> Listen on a random port locally, forwarding to 5000 in the Pod
+
 kubectl port-forward webapp 30080:80
 kubectl rollout status deploy webapp
 kubectl rollout history deploy webapp
