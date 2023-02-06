@@ -12,6 +12,7 @@ kubectl get pods --show-labels
 kubectl get pods --show-labels -l <label<key>=<label><value>
 kubectl get pods --show-labl -l release=0
 kubectl get pods --label <key>=<value>
+kubectl get pods --all-namespaces
 kubectl delete pod <pod_name>
 kubectl get pods (No running Pods in Default Namespace)
 kubectl exec -ti <pod_name> -- /bin/bash
@@ -141,6 +142,7 @@ Go to vi /etc/fstab and comment /dev/mapper/cryptswapl
 
 containerPort: If we want to expose Container Port
 targetPort: If we want to expose Host Port that will be binded to container.
+systemctl status kubelet (Worker Nodes)
 
 
 
