@@ -1,0 +1,100 @@
+#variables.tf
+variable "primary-region" {
+  type = string
+  default = "ap-south-1"
+}
+
+variable "instance-type" {
+  type = string
+  default = "t2.micro"
+}
+
+variable "aws-ami" {
+  type = string
+  default = "ami-0f8ca728008ff5af4"
+}
+
+#resource.tf
+resource "aws_instance" "web" {
+  ami = var.aws-ami
+  instance_type = var.instance-type
+  count = 1
+  tags = {
+    Name = "Jenkins"
+  }
+  user_data = ("user_data.sh")
+  security_groups = [aws_security_group.security-group.name]
+}
+
+resource "aws_key_pair" "ec2_key" {
+  key_name = "ec2_key"
+  public_key = tls_private_key.rsa.public_key_openssh
+}
+
+resource "tls_private_key" "rsa" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "local_file" "ec2_key" {
+  content = tls_private_key.rsa.private_key_pem
+  filename = "ec2_key"
+}
+
+resource "aws_security_group" "security-group" {
+  name = "fire-sg"
+  description = "Allow Rules"
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    from_port = 8080
+    to_port = 8080
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags = {
+    Name = "security-group"
+  }
+
+}
+
+
+#$env:Path += ";C:\Program Files\Git\usr\bin"
+#Get-Command sed
+
+
+
+#provider.tf
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
+  }
+  required_version = "~> 1.2.0"
+}
+
+# Configure the AWS Provider
+provider "aws" {
+  region = var.primary-region
+  profile = "default"
+}
