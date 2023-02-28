@@ -95,6 +95,7 @@ docker container rename <old_name> <new_name>
 
 docker image build -t vieux/apache:2.0 .
 docker image build -t vieux/apache:latest .
+docker build -t your-dockerhub-username/node-app:latest .
 docker image build -t addemp:latest ./
 docker image build -f /directorypath
 docker image tag <image_id> <username>/<repositoyname>:<version>
