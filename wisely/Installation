@@ -17,6 +17,11 @@ cd /opt/apache-tomcat-9.0.71/bin/; ./startup.sh
 curl ifconfig.me
 cat /root/.jenkins/secrets/initialAdminPassword
 sudo hostnamectl set-hostname jenkins-master
+sudo apt update
+sudo apt install docker.io -y
+sudo usermod -aG docker jenkins
+sudo chmod 666 /var/run/docker.sock
+sudo systemctl restart jenkins
 
 
 
