@@ -1,0 +1,122 @@
+pipeline {
+  agent {
+      label 'slave'
+  }
+  
+  tools {
+     jdk 'JAVA8'
+     maven 'MAVEN3'
+  }
+  
+  environment {
+		DOCKERHUB_CREDENTIALS=credentials('dockerhub-cred-raja')
+	}
+	
+  options {
+      buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')
+      disableResume()
+      disableConcurrentBuilds()
+  }
+  
+   stages {
+      stage('Checkout Code'){
+          steps {
+              git 'https://github.com/madhav83lv/PetClinic.git'
+          }
+      }
+	  
+	  stage('Maven Compile'){
+          steps {
+              sh "mvn clean install"
+          }
+      }
+	  
+	  stage('SonarQube Scan'){
+          environment {
+              scannerHome = tool 'Sonarqube 4.7'
+          }
+          steps {
+              withSonarQubeEnv('Sonarqube web'){
+                  sh "$scannerHome/bin/sonar-scanner -Dproject.settings=sonar-project.properties"
+              }
+          }
+      }
+      
+      stage('Maven Unit Test'){
+          steps {
+              echo "This stage is performing Unit Test"
+              sh "mvn test"
+          }
+      }
+      
+      stage('Maven Package'){
+          steps {
+              echo "This stage is Packaging the Code"
+              sh "mvn package"
+          }
+      }
+	  
+	  stage('Build') {
+			steps {
+				sh 'docker build -t bharathirajatut/nodeapp:${BUILD_NUMBER} .'
+			}
+		}
+		
+		stage('Trivy Scan') {
+            steps {
+                script {
+                    sh """trivy image --format template --template \"@/home/vijeta1/contrib/html.tpl\" --output trivy_report.html bharathirajatut/nodeapp:${BUILD_NUMBER}"""
+                    
+                }
+                
+            }
+        }
+		
+		stage('Login') {
+			steps {
+				sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+			}
+		}
+		
+		stage('Push') {
+
+			steps {
+				sh 'docker push bharathirajatut/nodeapp:latest'
+			}
+		}
+		
+		stage('Deploy to K8s') {
+		  steps {
+			shagent(['k8s-jenkins'])
+			{
+			 sh 'scp -r -o StrictHostKeyChecking=no node-deployment.yaml username@102.10.16.23:/tmp'
+					
+		    script{
+					try{
+						sh 'ssh username@102.10.16.23 kubectl apply -f /tmp/node-deployment.yaml --kubeconfig=/path/kube.yaml'
+                       }
+						 catch(error)
+							{
+
+							}
+							}
+							}
+							}
+							}
+							}
+      
+      stage('Upload Artifact'){
+          steps {
+              echo "Uploading Maven Artifact to Nexus"
+              sh '''curl -u admin:admin POST "http://15.206.82.195:8081/service/rest/v1/components?repository=petclinic" -H "accept: application/json" -H "Content-Type: multipart/form-data" -F "maven2.groupId=org.springframework.samples" -F "maven2.artifactId=petclinic" -F "maven2.version=1.0.0" -F "maven2.asset1=@${WORKSPACE}/target/petclinic.war" -F "maven2.asset1.extension=war"
+              '''
+          }  
+      }
+	  }
+	  post {
+		always {
+			sh 'docker logout'
+		}
+	}
+	  
+	  
