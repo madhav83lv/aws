@@ -1,0 +1,72 @@
+Playbooks
+
+>>
+
+- hosts: IP2
+  tasks:
+  - name: Install httpd
+    package:
+      name: "httpd"
+      state: present
+      
+>>
+
+- hosts: "*"
+  become: true
+  tasks:
+    - name: apt update && apt upgrade
+      apt:
+        update_cache: true
+        upgrade: yes
+        
+>>
+
+- name: Run Shell command
+  hosts: all
+  become: true
+  tasks:
+    - name: Run command
+      apt: echo hello
+      
+>>
+
+- name: Copy file
+  hosts: all
+  tasks:
+    - name: Copy file
+      copy:
+        src: /root/ansible/playbooks/apt.yaml
+        dest: /opt
+        
+>>
+
+- name: Create User
+  hosts: all
+  tasks:
+    - name: Create User
+      user:
+        name: mklabs
+        password: mklabs
+        
+>>
+
+- name: Update and Install
+  hosts: all
+  become: true
+  tasks:
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+
+    - name: Install GIT
+      apt:
+        name: git
+        state: latest
+
+    - name: Install http
+      apt:
+        name: http
+        state: latest
+        
+>>
+
