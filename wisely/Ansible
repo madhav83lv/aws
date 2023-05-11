@@ -70,3 +70,152 @@ Playbooks
         
 >>
 
+---
+- name: Install Oracle Java version 8
+  hosts: all
+  become: true
+
+  tasks:
+
+  - name: Install Dependencies
+    become: yes
+    apt:
+      name: "{{ packages }}"
+    vars:
+      packages:
+      - software-properties-common
+      - dirmngr
+      state: latest
+
+  - name: Install add-apt-repository
+    become: yes
+    apt:
+      name: software-properties-common
+      state: latest
+
+  - name: Add an apt key by id from a keyserver
+    become: yes
+    apt_key:
+      keyserver: keyserver.ubuntu.com
+      id: C2518248EEA14886
+
+  - name: Add Oracle Java Repository
+    become: yes
+    apt_repository:
+      repo: deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main
+      state: present
+
+
+  - name: Update cache and ignore errors in case of problems
+    become: yes
+    apt: 
+      update_cache=yes
+    ignore_errors: yes
+
+  - name: Accept Java 8 License
+    become: yes
+    debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+
+  - name: Purge Java 8 installer to avoid problems if installation is repeated
+    become: yes
+    apt:
+      name: oracle-java8-installer
+      purge: yes
+      state: absent
+
+  - name: Install Oracle Java 8
+    become: yes
+    apt:
+      name: "{{ packages }}"
+    vars:
+      packages:
+      - ca-certificates
+      - openjdk-8-jre-headless
+      state: latest
+
+>>
+
+- name: Installing Packages
+  apt:
+    name: "{{ item }}"
+    update_cache: yes
+  with_items:
+    - git
+    - nginx
+    - memcached 
+    
+>>
+
+- name: install httpd
+  apt:
+    name: httpd
+    state: latest
+
+- name: Start and Enable httpd
+  service:
+    name: httpd
+    state: started
+    enabled: true
+
+- name: Install vhost config file
+  template:
+    src: vhost.conf.j2
+    dest: /etc/httpd/conf.d/vhost.conf
+    owner: root
+    group: root
+    mode: 0644
+
+#handlers:
+
+- name: restart_httpd
+  service:
+    name: httpd
+    state: restarted
+
+
+- name: Create Apache vhost
+  hosts: server2.example.com
+  become: true
+
+  roles:
+    - vhost
+  
+  post_tasks:
+    - name: Install contents from local file
+      copy:
+        src: files/html/
+        dest: "/var/www/vhosts/{{ ansible_hostname }}" 
+      changed_when: true
+      notify: restart_httpd
+      
+>>
+
+- hosts: all
+  name: copy file from source to destination
+  gather_facts: false
+  become: true
+  become_user: root
+  become_method: sudo
+  remote_user: centos
+  tasks:
+
+    - name: Copy file with owner permissions to /etc/issue
+      copy:
+        src: /files/issue
+        dest: /var/www/html
+        owner: root
+        group: root
+        mode: '0544'
+
+    - name: Copy file with owner permissions to /etc/motd
+      copy:
+        src: /files/issue
+        dest: /etc/motd
+        owner: root
+        group: root
+        mode: '0544'
+        
+>>
+
+
+
