@@ -60,7 +60,7 @@ EOF
 sudo apt-get update
 sudo apt-get install kubeadm kubectl kubelet -y
 sudo apt-get update
-kubeadm init --apiserver-advertise-address=172.31.34.141 --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=NumCPU
+kubeadm init --apiserver-advertise-address=172.31.39.94 --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=NumCPU
 cd $HOME; mkdir -p .kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
